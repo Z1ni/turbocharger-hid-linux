@@ -1,0 +1,36 @@
+name: 'Create a release that includes a DKMS module when a new version is tagged'
+on:
+  push:
+    tags:
+      - v*.*.*
+permissions:
+  contents: write
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+      - name: Setup env
+        run: |
+          REF_NAME="${{github.ref_name}}"
+          echo "DKMS_VER=${REF_NAME#v}" >> "$GITHUB_ENV"
+      - name: Create DKMS release directory
+        run: 'mkdir hid-turbocharger-"$DKMS_VER"'
+      - name: Copy files
+        run: 'cp hid-turbocharger.c Makefile hid-turbocharger-"$DKMS_VER"/'
+      - name: Create dkms.conf
+        run: |
+          cat <<EOF > hid-turbocharger-"$DKMS_VER"/dkms.conf
+          PACKAGE_NAME="hid-turbocharger"
+          PACKAGE_VERSION="${DKMS_VER}"
+          BUILT_MODULE_NAME[0]="hid-turbocharger"
+          DEST_MODULE_LOCATION[0]="/kernel/drivers/hid/turbocharger"
+          AUTOINSTALL="yes"
+          EOF
+      - name: Build DKMS release .tar.gz
+        run: 'tar czvf hid-turbocharger-dkms-"$DKMS_VER".tar.gz hid-turbocharger-"$DKMS_VER"'
+      - name: Create a release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: 'hid-turbocharger-*.tar.gz'
