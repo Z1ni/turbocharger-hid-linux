@@ -19,7 +19,7 @@ MODULE_DESCRIPTION("HID driver for Virgoo / Rainbow Turbocharger controller");
  * causing the value to be interpreted as 129. This is fixed by setting the
  * following byte to 0xFF instead of 0x00.
  */
-static __u8 *turbocharger_report_fixup(struct hid_device *hdev, __u8 *rdesc,
+static const __u8 *turbocharger_report_fixup(struct hid_device *hdev, __u8 *rdesc,
 		unsigned int *rsize)
 {
 	if (*rsize == 138 && rdesc[36] == 0x16 && rdesc[37] == 0x81
